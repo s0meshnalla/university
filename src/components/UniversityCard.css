@@ -125,3 +125,17 @@
     background: rgba(99, 102, 241, 0.2);
     color: var(--primary-400);
 }
+
+.apply-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.apply-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}

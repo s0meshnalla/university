@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { applicationApi } from '../services/api'
 import UniversityCard from '../components/UniversityCard'
 import './RecommendationsPage.css'
 
@@ -9,9 +8,6 @@ function RecommendationsPage() {
     const [profile, setProfile] = useState(null)
     const [recommendations, setRecommendations] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [applyingTo, setApplyingTo] = useState(null)
-    const [showModal, setShowModal] = useState(false)
-    const [applicationResult, setApplicationResult] = useState(null)
 
     useEffect(() => {
         loadData()
@@ -29,82 +25,6 @@ function RecommendationsPage() {
         setProfile(JSON.parse(storedProfile))
         setRecommendations(JSON.parse(storedRecommendations))
         setLoading(false)
-    }
-
-    const handleApply = async (university) => {
-        setApplyingTo(university.name)
-        setShowModal(true)
-
-        const steps = [
-            "🔍 Analyzing university application portal...",
-            "📝 Mapping profile data to application fields...",
-            "📄 Preparing academic transcripts and test scores...",
-            "📤 Submitting final application package...",
-            "✅ Application successfully submitted!"
-        ]
-
-        try {
-            // Initial state: Starting
-            setApplicationResult({
-                university: university,
-                processing: true,
-                currentStep: 0,
-                progress: 10,
-                message: steps[0]
-            })
-
-            // Step 1: Small delay for "Analysis"
-            await new Promise(r => setTimeout(r, 1500))
-            setApplicationResult(prev => ({ ...prev, currentStep: 1, progress: 30, message: steps[1] }))
-
-            // Step 2: "Mapping data"
-            await new Promise(r => setTimeout(r, 2000))
-            setApplicationResult(prev => ({ ...prev, currentStep: 2, progress: 55, message: steps[2] }))
-
-            // Step 3: "Preparing docs"
-            await new Promise(r => setTimeout(r, 1800))
-            setApplicationResult(prev => ({ ...prev, currentStep: 3, progress: 80, message: steps[3] }))
-
-            // Actual API Call (Hidden in the "Submitting" step)
-            const data = {
-                university_name: university.name,
-                country: university.country,
-                program: university.program
-            }
-            const result = await applicationApi.apply(data)
-
-            // Step 4: Final Success
-            await new Promise(r => setTimeout(r, 1500))
-            setApplicationResult({
-                university: university,
-                success: true,
-                processing: false,
-                message: steps[4],
-                tracking_id: result.application_id,
-                next_steps: [
-                    "Your application is now under official review.",
-                    "The university admissions team will verify your credentials.",
-                    "Keep an eye on your dashboard for status updates."
-                ],
-                documents_required: [
-                    "Transcript (Submitted)",
-                    "Statement of Purpose (Submitted)",
-                    "Resume/CV (Submitted)"
-                ]
-            })
-        } catch (error) {
-            console.error('Error initiating application:', error)
-            const errorMsg = error.response?.data?.detail || 'Failed to apply. Please try again.'
-
-            setApplicationResult({
-                university: university,
-                success: false,
-                processing: false,
-                message: errorMsg
-            })
-        } finally {
-            setApplyingTo(null)
-        }
     }
 
     const getScoreClass = (score) => {
@@ -185,8 +105,6 @@ function RecommendationsPage() {
                             <UniversityCard
                                 key={index}
                                 university={university}
-                                onApply={handleApply}
-                                isApplying={applyingTo === university.name}
                             />
                         ))}
                     </div>
@@ -204,78 +122,6 @@ function RecommendationsPage() {
                     </ul>
                 </div>
             </div>
-
-            {/* Application Modal */}
-            {showModal && applicationResult && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
-
-                        {applicationResult.processing ? (
-                            <div className="processing-state">
-                                <div className="agent-avatar">🤖</div>
-                                <h3>AI Agent is Applying...</h3>
-                                <p className="step-message">{applicationResult.message}</p>
-                                <div className="progress-container">
-                                    <div
-                                        className="progress-bar"
-                                        style={{ width: `${applicationResult.progress}%` }}
-                                    ></div>
-                                </div>
-                                <p className="processing-subtext">
-                                    This usually takes 5-10 seconds as we navigate the university portal.
-                                </p>
-                            </div>
-                        ) : applicationResult.success ? (
-                            <div className="success-state">
-                                <div className="success-header">
-                                    <div className="success-icon">✓</div>
-                                    <h2>Application Initiated!</h2>
-                                </div>
-
-                                <div className="result-info">
-                                    <p>Successfully submitted application for:</p>
-                                    <h3>{applicationResult.university.name}</h3>
-                                    <div className="tracking-id">
-                                        Tracking ID: <span>{applicationResult.tracking_id || 'UNI-7829-X'}</span>
-                                    </div>
-                                </div>
-
-                                <div className="next-steps-section">
-                                    <h3>Next Steps via AI Agent:</h3>
-                                    <ul>
-                                        {applicationResult.next_steps?.map((step, i) => (
-                                            <li key={i}>{step}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <div className="docs-submitted">
-                                    <h3>Mapped Documents:</h3>
-                                    <div className="doc-tags">
-                                        {applicationResult.documents_required?.map((doc, i) => (
-                                            <span key={i} className="doc-tag">{doc}</span>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button className="primary-btn" onClick={() => setShowModal(false)}>
-                                    Excellent, Thanks!
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="error-state">
-                                <div className="error-icon">×</div>
-                                <h2>Application Failed</h2>
-                                <p>{applicationResult.message}</p>
-                                <button className="primary-btn" onClick={() => setShowModal(false)}>
-                                    Close
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

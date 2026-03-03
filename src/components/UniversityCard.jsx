@@ -1,6 +1,6 @@
 import './UniversityCard.css'
 
-function UniversityCard({ university, onApply, isApplying }) {
+function UniversityCard({ university }) {
     const getMatchColor = (score) => {
         if (score >= 80) return 'high'
         if (score >= 60) return 'medium'
@@ -68,13 +68,14 @@ function UniversityCard({ university, onApply, isApplying }) {
                 <span className={`match-badge badge-${getMatchColor(university.match_score)}`}>
                     {getMatchLabel(university.match_score)} School
                 </span>
-                <button
-                    className="btn btn-accent btn-sm"
-                    onClick={() => onApply(university)}
-                    disabled={isApplying}
+                <a
+                    href={university.website || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-accent btn-sm apply-link"
                 >
-                    {isApplying ? 'Processing...' : 'Apply Now'}
-                </button>
+                    Apply Now ↗
+                </a>
             </div>
         </div>
     )
