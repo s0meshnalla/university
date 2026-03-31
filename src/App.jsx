@@ -1,54 +1,63 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import AIChatWidget from './components/AIChatWidget'
 import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import FormPage from './pages/FormPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import ApplicationsPage from './pages/ApplicationsPage'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
+import SOPGeneratorPage from './pages/SOPGeneratorPage'
+import ComparePage from './pages/ComparePage'
+import DocumentsPage from './pages/DocumentsPage'
+import NotFoundPage from './pages/NotFoundPage'
 
-const ProtectedRoute = () => {
-    const { user, loading } = useAuth()
-    const location = useLocation()
+function ProtectedRoute({ children }) {
+    const { user, isLoading } = useAuth()
+    if (isLoading) return <div className="loading-overlay"><div className="spinner" /></div>
+    return user ? children : <Navigate to="/login" />
+}
 
-    if (loading) return <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--bg-dark)'
-    }}>Loading...</div>
-
-    return user ? <Outlet /> : <Navigate to="/login" state={{ from: location }} replace />
+function AppRoutes() {
+    return (
+        <>
+            <Navbar />
+            <main>
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                    <Route path="/apply" element={<ProtectedRoute><FormPage /></ProtectedRoute>} />
+                    <Route path="/recommendations" element={<ProtectedRoute><RecommendationsPage /></ProtectedRoute>} />
+                    <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+                    <Route path="/sop-generator" element={<ProtectedRoute><SOPGeneratorPage /></ProtectedRoute>} />
+                    <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
+                    <Route path="/documents" element={<ProtectedRoute><DocumentsPage /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+            </main>
+            <Footer />
+            <AIChatWidget />
+        </>
+    )
 }
 
 function App() {
     return (
-        <AuthProvider>
-            <Router>
-                <div className="app">
-                    <Navbar />
-                    <main>
-                        <Routes>
-                            <Route path="/" element={<HomePage />} />
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="/signup" element={<SignupPage />} />
-
-                            {/* Protected Routes */}
-                            {/* Protected Routes */}
-                            <Route element={<ProtectedRoute />}>
-                                <Route path="/profile" element={<ProfilePage />} />
-                                <Route path="/apply" element={<FormPage />} />
-                                <Route path="/recommendations" element={<RecommendationsPage />} />
-                                <Route path="/applications" element={<ApplicationsPage />} />
-                            </Route>
-                        </Routes>
-                    </main>
-                </div>
-            </Router>
-        </AuthProvider>
+        <Router>
+            <ToastProvider>
+                <AuthProvider>
+                    <AppRoutes />
+                </AuthProvider>
+            </ToastProvider>
+        </Router>
     )
 }
 

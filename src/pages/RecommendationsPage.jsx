@@ -7,6 +7,7 @@ function RecommendationsPage() {
     const navigate = useNavigate()
     const [profile, setProfile] = useState(null)
     const [recommendations, setRecommendations] = useState(null)
+    const [compareList, setCompareList] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -16,6 +17,7 @@ function RecommendationsPage() {
     const loadData = () => {
         const storedProfile = sessionStorage.getItem('userProfile')
         const storedRecommendations = sessionStorage.getItem('recommendations')
+        const storedCompareList = JSON.parse(sessionStorage.getItem('compareList') || '[]')
 
         if (!storedProfile || !storedRecommendations) {
             navigate('/apply')
@@ -24,7 +26,29 @@ function RecommendationsPage() {
 
         setProfile(JSON.parse(storedProfile))
         setRecommendations(JSON.parse(storedRecommendations))
+        setCompareList(storedCompareList)
         setLoading(false)
+    }
+
+    const handleToggleCompare = (university) => {
+        setCompareList((prev) => {
+            const exists = prev.some((u) => u.name === university.name)
+            let updated = prev
+
+            if (exists) {
+                updated = prev.filter((u) => u.name !== university.name)
+            } else if (prev.length < 3) {
+                updated = [...prev, university]
+            }
+
+            sessionStorage.setItem('compareList', JSON.stringify(updated))
+            return updated
+        })
+    }
+
+    const openCompare = () => {
+        if (compareList.length < 2) return
+        navigate('/compare')
     }
 
     const getScoreClass = (score) => {
@@ -96,8 +120,19 @@ function RecommendationsPage() {
                 {/* Universities Grid */}
                 <div className="universities-section">
                     <div className="section-header">
-                        <h2>Recommended Universities</h2>
-                        <p>{recommendations?.universities?.length || 0} universities matched to your profile</p>
+                        <div>
+                            <h2>Recommended Universities</h2>
+                            <p>{recommendations?.universities?.length || 0} universities matched to your profile</p>
+                        </div>
+                        <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={openCompare}
+                            disabled={compareList.length < 2}
+                            title={compareList.length < 2 ? 'Select at least 2 universities to compare' : 'Compare selected universities'}
+                        >
+                            Compare Selected ({compareList.length}/3)
+                        </button>
                     </div>
 
                     <div className="universities-grid">
@@ -105,6 +140,8 @@ function RecommendationsPage() {
                             <UniversityCard
                                 key={index}
                                 university={university}
+                                onToggleCompare={handleToggleCompare}
+                                isCompared={compareList.some((u) => u.name === university.name)}
                             />
                         ))}
                     </div>

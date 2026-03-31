@@ -7,37 +7,47 @@ function Navbar() {
     const location = useLocation()
     const { user, logout } = useAuth()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+    const [isMobileOpen, setIsMobileOpen] = useState(false)
+    const [scrolled, setScrolled] = useState(false)
 
-    // Close dropdown when location changes
     useEffect(() => {
         setIsDropdownOpen(false)
+        setIsMobileOpen(false)
     }, [location])
 
-    // Get user initial
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 20)
+        window.addEventListener('scroll', onScroll)
+        return () => window.removeEventListener('scroll', onScroll)
+    }, [])
+
     const initial = user?.email ? user.email[0].toUpperCase() : 'U'
+    const isActive = (path) => location.pathname === path ? 'active' : ''
 
     return (
-        <nav className="navbar">
+        <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
             <div className="container navbar-container">
-                <Link to="/" className="navbar-logo">
+                <Link to={user ? '/dashboard' : '/'} className="navbar-logo">
                     <span className="logo-icon">🎓</span>
                     <span className="logo-text">Uni<span className="gradient-text">Guide</span></span>
                 </Link>
 
-                <div className="navbar-links">
-                    <Link
-                        to="/"
-                        className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-                    >
-                        Home
-                    </Link>
+                {/* Mobile Hamburger */}
+                <button className="mobile-toggle" onClick={() => setIsMobileOpen(!isMobileOpen)}>
+                    <span className={`hamburger ${isMobileOpen ? 'open' : ''}`}>
+                        <span /><span /><span />
+                    </span>
+                </button>
+
+                <div className={`navbar-center ${isMobileOpen ? 'mobile-open' : ''}`}>
+                    <Link to="/" className={`nav-link ${isActive('/')}`}>Home</Link>
                     {user && (
-                        <Link
-                            to="/apply"
-                            className={`nav-link ${location.pathname === '/apply' ? 'active' : ''}`}
-                        >
-                            Apply Now
-                        </Link>
+                        <>
+                            <Link to="/dashboard" className={`nav-link ${isActive('/dashboard')}`}>Dashboard</Link>
+                            <Link to="/apply" className={`nav-link ${isActive('/apply')}`}>Find Universities</Link>
+                            <Link to="/sop-generator" className={`nav-link ${isActive('/sop-generator')}`}>SOP</Link>
+                            <Link to="/applications" className={`nav-link ${isActive('/applications')}`}>Applications</Link>
+                        </>
                     )}
                 </div>
 
@@ -56,13 +66,23 @@ function Navbar() {
                                     <div className="dropdown-user-info">
                                         <span className="dropdown-email" title={user.email}>{user.email}</span>
                                     </div>
+                                    <Link to="/dashboard" className="dropdown-item">
+                                        <span>📊</span> Dashboard
+                                    </Link>
                                     <Link to="/profile" className="dropdown-item">
                                         <span>👤</span> Profile
                                     </Link>
                                     <Link to="/applications" className="dropdown-item">
-                                        <span>📂</span> My Applications
+                                        <span>📂</span> Applications
                                     </Link>
-                                    <button onClick={logout} className="dropdown-item">
+                                    <Link to="/documents" className="dropdown-item">
+                                        <span>📋</span> Documents
+                                    </Link>
+                                    <Link to="/compare" className="dropdown-item">
+                                        <span>⚖️</span> Compare
+                                    </Link>
+                                    <div className="dropdown-divider" />
+                                    <button onClick={logout} className="dropdown-item dropdown-logout">
                                         <span>🚪</span> Logout
                                     </button>
                                 </div>
@@ -70,12 +90,8 @@ function Navbar() {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <Link to="/login" className="nav-link">
-                                Sign In
-                            </Link>
-                            <Link to="/signup" className="btn btn-primary btn-sm navbar-cta">
-                                Get Started
-                            </Link>
+                            <Link to="/login" className="nav-link">Sign In</Link>
+                            <Link to="/signup" className="btn btn-primary btn-sm navbar-cta">Get Started</Link>
                         </div>
                     )}
                 </div>

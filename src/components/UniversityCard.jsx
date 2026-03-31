@@ -1,6 +1,6 @@
 import './UniversityCard.css'
 
-function UniversityCard({ university }) {
+function UniversityCard({ university, onToggleCompare, isCompared = false }) {
     const getMatchColor = (score) => {
         if (score >= 80) return 'high'
         if (score >= 60) return 'medium'
@@ -68,14 +68,25 @@ function UniversityCard({ university }) {
                 <span className={`match-badge badge-${getMatchColor(university.match_score)}`}>
                     {getMatchLabel(university.match_score)} School
                 </span>
-                <a
-                    href={university.website || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-accent btn-sm apply-link"
-                >
-                    Apply Now ↗
-                </a>
+                <div className="university-card-actions">
+                    {onToggleCompare && (
+                        <button
+                            type="button"
+                            className={`btn btn-sm compare-btn ${isCompared ? 'compare-btn-active' : ''}`}
+                            onClick={() => onToggleCompare(university)}
+                        >
+                            {isCompared ? 'Compared ✓' : 'Compare'}
+                        </button>
+                    )}
+                    <a
+                        href={university.website || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-accent btn-sm apply-link"
+                    >
+                        Apply Now ↗
+                    </a>
+                </div>
             </div>
         </div>
     )

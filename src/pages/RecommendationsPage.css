@@ -1,5 +1,5 @@
 .recommendations-page {
-    padding-top: 100px;
+    padding-top: 1rem;
     padding-bottom: var(--space-16);
     min-height: 100vh;
 }
@@ -166,6 +166,10 @@
 }
 
 .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
     margin-bottom: var(--space-6);
 }
 
@@ -187,6 +191,10 @@
 @media (max-width: 1024px) {
     .universities-grid {
         grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        flex-direction: column;
     }
 }
 
