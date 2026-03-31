@@ -46,6 +46,10 @@ export const userApi = {
     getMajors: async () => {
         const response = await api.get('/user/majors')
         return response.data
+    },
+    whatIfSimulation: async (payload) => {
+        const response = await api.post('/user/what-if', payload)
+        return response.data
     }
 }
 

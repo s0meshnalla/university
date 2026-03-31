@@ -132,6 +132,62 @@
     margin-top: var(--space-2);
 }
 
+.country-entry-row {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    align-items: flex-start;
+}
+
+.country-entry-row .form-input,
+.country-autocomplete-wrapper {
+    min-width: 0;
+}
+
+.country-autocomplete-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.country-suggestions-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: rgba(26, 26, 46, 0.98);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 30;
+    padding: 4px;
+}
+
+.country-suggestion-item {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 0.65rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+}
+
+.country-suggestion-item:hover {
+    background: rgba(99, 102, 241, 0.18);
+    color: var(--text-primary);
+}
+
+.selected-country-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
 .country-chip {
     padding: var(--space-2) var(--space-4);
     background: rgba(255, 255, 255, 0.05);
@@ -163,6 +219,7 @@
     width: 100%;
     max-width: 100%;
     /* Prevent overflow */
+    min-width: 0;
 }
 
 .gpa-input-group .form-input {
@@ -183,6 +240,12 @@
     width: 80px;
     /* Reduced fixed width */
     flex-shrink: 0;
+    flex: 0 0 80px;
+}
+
+.gpa-input-group .form-input,
+.gpa-input-group .form-select {
+    min-width: 0;
 }
 
 /* Score Sections */
@@ -289,6 +352,14 @@
     .form-navigation {
         flex-wrap: wrap;
         gap: var(--space-3);
+    }
+
+    .country-entry-row {
+        flex-direction: column;
+    }
+
+    .country-entry-row .btn {
+        width: 100%;
     }
 
     .form-navigation .btn {

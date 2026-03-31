@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { documentApi, applicationApi } from '../services/api'
 import { useToast } from '../context/ToastContext'
+import CustomSelect from '../components/CustomSelect'
 import './DocumentsPage.css'
 
 function DocumentsPage() {
@@ -80,18 +81,18 @@ function DocumentsPage() {
                 {/* Filter by Application */}
                 <div className="docs-filter card-glass fade-in stagger-1">
                     <div className="filter-row">
-                        <select
+                        <CustomSelect
                             className="form-select"
-                            value={selectedApp || ''}
-                            onChange={(e) => setSelectedApp(e.target.value ? parseInt(e.target.value) : null)}
-                        >
-                            <option value="">All Applications</option>
-                            {applications.map(app => (
-                                <option key={app.id} value={app.id}>
-                                    {app.university_name} — {app.program}
-                                </option>
-                            ))}
-                        </select>
+                            value={selectedApp ?? ''}
+                            onChange={(value) => setSelectedApp(value ? parseInt(value) : null)}
+                            options={[
+                                { value: '', label: 'All Applications' },
+                                ...applications.map((app) => ({
+                                    value: String(app.id),
+                                    label: `${app.university_name} — ${app.program}`,
+                                })),
+                            ]}
+                        />
                         <div className="progress-summary">
                             <span className="progress-text">{completedDocs}/{totalDocs} complete</span>
                             <div className="progress-bar" style={{ width: '200px' }}>

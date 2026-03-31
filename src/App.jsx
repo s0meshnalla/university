@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import Navbar from './components/Navbar'
@@ -18,9 +18,10 @@ import DocumentsPage from './pages/DocumentsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function ProtectedRoute({ children }) {
-    const { user, isLoading } = useAuth()
-    if (isLoading) return <div className="loading-overlay"><div className="spinner" /></div>
-    return user ? children : <Navigate to="/login" />
+    const location = useLocation()
+    const { user, loading } = useAuth()
+    if (loading) return <div className="loading-overlay"><div className="spinner" /></div>
+    return user ? children : <Navigate to="/login" replace state={{ from: location }} />
 }
 
 function AppRoutes() {

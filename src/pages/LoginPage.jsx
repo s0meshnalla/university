@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './AuthPages.css'
@@ -10,11 +10,17 @@ function LoginPage() {
     const [error, setError] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const { login } = useAuth()
+    const { login, user, loading } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
 
     const from = location.state?.from?.pathname || '/dashboard'
+
+    useEffect(() => {
+        if (!loading && user) {
+            navigate('/dashboard', { replace: true })
+        }
+    }, [loading, user, navigate])
 
     const handleSubmit = async (e) => {
         e.preventDefault()

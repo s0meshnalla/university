@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { userApi } from '../services/api'
 import api from '../services/api'
+import { ALL_COUNTRIES, POPULAR_COUNTRIES, COUNTRY_ALIASES } from '../utils/countries'
+import CustomSelect from '../components/CustomSelect'
 import './FormPage.css' // Reusing styles
 
 const STEPS = [
@@ -10,18 +12,17 @@ const STEPS = [
     { id: 3, title: 'Test Scores', icon: '📝' }
 ]
 
-const COUNTRIES = [
-    { code: 'USA', name: 'United States' },
-    { code: 'UK', name: 'United Kingdom' },
-    { code: 'Canada', name: 'Canada' },
-    { code: 'Germany', name: 'Germany' },
-    { code: 'Australia', name: 'Australia' },
-    { code: 'France', name: 'France' },
-    { code: 'Netherlands', name: 'Netherlands' },
-    { code: 'Singapore', name: 'Singapore' },
-    { code: 'Ireland', name: 'Ireland' },
-    { code: 'Sweden', name: 'Sweden' }
-]
+const normalizeCountryValue = (value) => {
+    if (!value || typeof value !== 'string') return ''
+    return value.trim().replace(/\s+/g, ' ')
+}
+
+const normalizeLoadedCountries = (countries = []) => {
+    return countries
+        .map((country) => COUNTRY_ALIASES[country] || country)
+        .map(normalizeCountryValue)
+        .filter(Boolean)
+}
 
 const MAJORS = [
     'Computer Science', 'Data Science', 'Artificial Intelligence',
@@ -38,6 +39,8 @@ function ProfilePage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errors, setErrors] = useState({})
     const [loading, setLoading] = useState(true)
+    const [countryInput, setCountryInput] = useState('')
+    const [isCountryInputFocused, setIsCountryInputFocused] = useState(false)
 
     const [formData, setFormData] = useState({
         // Personal Info
@@ -94,6 +97,7 @@ function ProfilePage() {
                         toefl_score: data.scores.toefl_score?.toString() || '',
                         ielts_score: data.scores.ielts_score?.toString() || '',
                         gmat_score: data.scores.gmat_score?.toString() || '',
+                        target_countries: normalizeLoadedCountries(data.personal.target_countries || []),
                     })
                 }
             } catch (error) {
@@ -112,14 +116,55 @@ function ProfilePage() {
         }
     }
 
-    const toggleCountry = (code) => {
+    const hasCountry = (countryName, list) => {
+        const key = normalizeCountryValue(countryName).toLowerCase()
+        return list.some((item) => normalizeCountryValue(item).toLowerCase() === key)
+    }
+
+    const toggleCountry = (countryName) => {
+        const normalized = normalizeCountryValue(countryName)
+        if (!normalized) return
+
         setFormData(prev => ({
             ...prev,
-            target_countries: prev.target_countries.includes(code)
-                ? prev.target_countries.filter(c => c !== code)
-                : [...prev.target_countries, code]
+            target_countries: hasCountry(normalized, prev.target_countries)
+                ? prev.target_countries.filter((country) => normalizeCountryValue(country).toLowerCase() !== normalized.toLowerCase())
+                : [...prev.target_countries, normalized]
         }))
     }
+
+    const addCountryValue = (value) => {
+        const normalized = normalizeCountryValue(value)
+        if (!normalized) return
+
+        setFormData((prev) => {
+            if (hasCountry(normalized, prev.target_countries)) return prev
+            return {
+                ...prev,
+                target_countries: [...prev.target_countries, normalized],
+            }
+        })
+        setCountryInput('')
+
+        if (errors.target_countries) {
+            setErrors((prev) => ({ ...prev, target_countries: null }))
+        }
+    }
+
+    const handleAddCountry = () => addCountryValue(countryInput)
+
+    const handleCountrySuggestionClick = (country) => {
+        addCountryValue(country)
+        setIsCountryInputFocused(false)
+    }
+
+    const countrySuggestions = ALL_COUNTRIES
+        .filter((country) => {
+            const input = normalizeCountryValue(countryInput).toLowerCase()
+            if (!input) return false
+            return country.toLowerCase().includes(input) && !hasCountry(country, formData.target_countries)
+        })
+        .slice(0, 8)
 
     const validateStep = (step) => {
         const newErrors = {}
@@ -280,15 +325,64 @@ function ProfilePage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Preferred Countries (Default)</label>
+                                    <div className="country-entry-row">
+                                        <div className="country-autocomplete-wrapper">
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={countryInput}
+                                                placeholder="Add any country (e.g., Japan, Switzerland)"
+                                                onFocus={() => setIsCountryInputFocused(true)}
+                                                onBlur={() => setTimeout(() => setIsCountryInputFocused(false), 120)}
+                                                onChange={(e) => setCountryInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault()
+                                                        handleAddCountry()
+                                                    }
+                                                }}
+                                            />
+                                            {isCountryInputFocused && countrySuggestions.length > 0 && (
+                                                <div className="country-suggestions-panel" role="listbox" aria-label="Country suggestions">
+                                                    {countrySuggestions.map((country) => (
+                                                        <button
+                                                            key={country}
+                                                            type="button"
+                                                            className="country-suggestion-item"
+                                                            onClick={() => handleCountrySuggestionClick(country)}
+                                                        >
+                                                            {country}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddCountry}>
+                                            Add
+                                        </button>
+                                    </div>
                                     <div className="country-grid">
-                                        {COUNTRIES.map((country) => (
+                                        {POPULAR_COUNTRIES.map((country) => (
                                             <button
-                                                key={country.code}
+                                                key={country}
                                                 type="button"
-                                                className={`country-chip ${formData.target_countries.includes(country.code) ? 'selected' : ''}`}
-                                                onClick={() => toggleCountry(country.code)}
+                                                className={`country-chip ${hasCountry(country, formData.target_countries) ? 'selected' : ''}`}
+                                                onClick={() => toggleCountry(country)}
                                             >
-                                                {country.name}
+                                                {country}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="selected-country-chips">
+                                        {formData.target_countries.map((country) => (
+                                            <button
+                                                key={country}
+                                                type="button"
+                                                className="country-chip selected"
+                                                onClick={() => toggleCountry(country)}
+                                                title="Click to remove"
+                                            >
+                                                {country} ✕
                                             </button>
                                         ))}
                                     </div>
@@ -305,15 +399,16 @@ function ProfilePage() {
                                 <div className="form-grid">
                                     <div className="form-group">
                                         <label className="form-label">Current Degree</label>
-                                        <select
+                                        <CustomSelect
                                             className="form-select"
                                             value={formData.current_degree}
-                                            onChange={(e) => updateField('current_degree', e.target.value)}
-                                        >
-                                            <option value="bachelors">Bachelor's Degree</option>
-                                            <option value="masters">Master's Degree</option>
-                                            <option value="phd">PhD</option>
-                                        </select>
+                                            onChange={(value) => updateField('current_degree', value)}
+                                            options={[
+                                                { value: 'bachelors', label: "Bachelor's Degree" },
+                                                { value: 'masters', label: "Master's Degree" },
+                                                { value: 'phd', label: 'PhD' },
+                                            ]}
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">University Name *</label>
@@ -327,14 +422,16 @@ function ProfilePage() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Major *</label>
-                                        <select
+                                        <CustomSelect
                                             className={`form-select ${errors.major ? 'error' : ''}`}
                                             value={formData.major}
-                                            onChange={(e) => updateField('major', e.target.value)}
-                                        >
-                                            <option value="">Select Major</option>
-                                            {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
-                                        </select>
+                                            onChange={(value) => updateField('major', value)}
+                                            placeholder="Select Major"
+                                            options={[
+                                                { value: '', label: 'Select Major', disabled: true },
+                                                ...MAJORS.map((m) => ({ value: m, label: m })),
+                                            ]}
+                                        />
                                         {errors.major && <span className="form-error">{errors.major}</span>}
                                     </div>
                                     <div className="form-group">
@@ -348,28 +445,29 @@ function ProfilePage() {
                                                 onChange={(e) => updateField('gpa', e.target.value)}
                                             />
                                             <span className="gpa-separator">/</span>
-                                            <select
+                                            <CustomSelect
                                                 className="form-select gpa-scale"
                                                 value={formData.gpa_scale}
-                                                onChange={(e) => updateField('gpa_scale', e.target.value)}
-                                            >
-                                                <option value="10">10</option>
-                                                <option value="4">4</option>
-                                            </select>
+                                                onChange={(value) => updateField('gpa_scale', value)}
+                                                options={[
+                                                    { value: '10', label: '10' },
+                                                    { value: '4', label: '4' },
+                                                ]}
+                                            />
                                         </div>
                                         {errors.gpa && <span className="form-error">{errors.gpa}</span>}
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Grad Year</label>
-                                        <select
+                                        <CustomSelect
                                             className="form-select"
                                             value={formData.graduation_year}
-                                            onChange={(e) => updateField('graduation_year', e.target.value)}
-                                        >
-                                            {Array.from({ length: 10 }, (_, i) => 2020 + i).map((y) => (
-                                                <option key={y} value={y}>{y}</option>
-                                            ))}
-                                        </select>
+                                            onChange={(value) => updateField('graduation_year', value)}
+                                            options={Array.from({ length: 10 }, (_, i) => {
+                                                const year = String(2020 + i)
+                                                return { value: year, label: year }
+                                            })}
+                                        />
                                     </div>
                                 </div>
                             </div>

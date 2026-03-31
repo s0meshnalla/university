@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { applicationApi } from '../services/api'
+import { resolveUniversityApplyTarget } from '../utils/universityLinks'
 import './ComparePage.css'
 
 function ComparePage() {
@@ -100,7 +101,17 @@ function ComparePage() {
                                 <div className="compare-label"></div>
                                 {selected.map((uni, i) => (
                                     <div key={i} className="compare-cell header-cell">
-                                        <span className="cell-uni-name">{uni.name}</span>
+                                        <div className="header-cell-top">
+                                            <span className="cell-uni-name">{uni.name}</span>
+                                            <button
+                                                type="button"
+                                                className="compare-remove-btn"
+                                                onClick={() => toggleSelect(uni)}
+                                                aria-label={`Remove ${uni.name} from comparison`}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
                                         <span className="cell-uni-country">📍 {uni.country}</span>
                                     </div>
                                 ))}
@@ -178,15 +189,27 @@ function ComparePage() {
                             {/* Website */}
                             <div className="compare-row">
                                 <div className="compare-label">🔗 Apply</div>
-                                {selected.map((uni, i) => (
-                                    <div key={i} className="compare-cell">
-                                        {uni.website ? (
-                                            <a href={uni.website} target="_blank" rel="noopener noreferrer" className="btn btn-accent btn-sm">
-                                                Apply Now ↗
+                                {selected.map((uni, i) => {
+                                    const applyTarget = resolveUniversityApplyTarget(uni)
+
+                                    return (
+                                        <div key={i} className="compare-cell">
+                                            <a
+                                                href={applyTarget.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn btn-accent btn-sm"
+                                                title={
+                                                    applyTarget.isOfficial
+                                                        ? `Open official admissions page for ${uni.name}`
+                                                        : `Search official admissions page for ${uni.name}`
+                                                }
+                                            >
+                                                {applyTarget.isOfficial ? 'Apply Now ↗' : 'Find Apply Page ↗'}
                                             </a>
-                                        ) : '—'}
-                                    </div>
-                                ))}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     </div>

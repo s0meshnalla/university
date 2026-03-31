@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { sopApi, applicationApi } from '../services/api'
 import { useToast } from '../context/ToastContext'
+import CustomSelect from '../components/CustomSelect'
 import './SOPGeneratorPage.css'
 
 function SOPGeneratorPage() {
@@ -14,6 +15,7 @@ function SOPGeneratorPage() {
     const [drafts, setDrafts] = useState([])
     const [showDrafts, setShowDrafts] = useState(false)
     const [savedUniversities, setSavedUniversities] = useState([])
+    const [selectedSavedUniversityId, setSelectedSavedUniversityId] = useState('')
 
     useEffect(() => {
         loadDrafts()
@@ -97,24 +99,26 @@ function SOPGeneratorPage() {
                         {savedUniversities.length > 0 && (
                             <div className="form-group">
                                 <label className="form-label">Quick Select (from saved)</label>
-                                <select
+                                <CustomSelect
                                     className="form-select"
-                                    onChange={(e) => {
-                                        const uni = savedUniversities.find(s => s.id === parseInt(e.target.value))
+                                    value={selectedSavedUniversityId}
+                                    onChange={(value) => {
+                                        setSelectedSavedUniversityId(value)
+                                        const uni = savedUniversities.find((s) => String(s.id) === String(value))
                                         if (uni) {
                                             setUniversity(uni.university_data.name || '')
                                             setProgram(uni.university_data.program || '')
                                         }
                                     }}
-                                    defaultValue=""
-                                >
-                                    <option value="">Select saved university...</option>
-                                    {savedUniversities.map(s => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.university_data.name} — {s.university_data.program}
-                                        </option>
-                                    ))}
-                                </select>
+                                    placeholder="Select saved university..."
+                                    options={[
+                                        { value: '', label: 'Select saved university...', disabled: true },
+                                        ...savedUniversities.map((s) => ({
+                                            value: String(s.id),
+                                            label: `${s.university_data.name} — ${s.university_data.program}`,
+                                        })),
+                                    ]}
+                                />
                             </div>
                         )}
 

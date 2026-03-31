@@ -1,6 +1,18 @@
 import './UniversityCard.css'
+import { resolveUniversityApplyTarget } from '../utils/universityLinks'
 
-function UniversityCard({ university, onToggleCompare, isCompared = false }) {
+function UniversityCard({
+    university,
+    onToggleCompare,
+    isCompared = false,
+    onAddApplication,
+    isAddingApplication = false,
+    onToggleSave,
+    isSaved = false,
+    isSaveLoading = false,
+}) {
+    const applyTarget = resolveUniversityApplyTarget(university)
+
     const getMatchColor = (score) => {
         if (score >= 80) return 'high'
         if (score >= 60) return 'medium'
@@ -69,6 +81,26 @@ function UniversityCard({ university, onToggleCompare, isCompared = false }) {
                     {getMatchLabel(university.match_score)} School
                 </span>
                 <div className="university-card-actions">
+                    {onAddApplication && (
+                        <button
+                            type="button"
+                            className="btn btn-sm add-app-btn"
+                            onClick={() => onAddApplication(university)}
+                            disabled={isAddingApplication}
+                        >
+                            {isAddingApplication ? 'Adding...' : 'Add Application'}
+                        </button>
+                    )}
+                    {onToggleSave && (
+                        <button
+                            type="button"
+                            className={`btn btn-sm save-btn ${isSaved ? 'save-btn-active' : ''}`}
+                            onClick={() => onToggleSave(university)}
+                            disabled={isSaveLoading}
+                        >
+                            {isSaveLoading ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save'}
+                        </button>
+                    )}
                     {onToggleCompare && (
                         <button
                             type="button"
@@ -79,12 +111,17 @@ function UniversityCard({ university, onToggleCompare, isCompared = false }) {
                         </button>
                     )}
                     <a
-                        href={university.website || '#'}
+                        href={applyTarget.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-accent btn-sm apply-link"
+                        title={
+                            applyTarget.isOfficial
+                                ? `Open official admissions page for ${university.name}`
+                                : `Search official admissions page for ${university.name}`
+                        }
                     >
-                        Apply Now ↗
+                        {applyTarget.isOfficial ? 'Apply Now ↗' : 'Find Apply Page ↗'}
                     </a>
                 </div>
             </div>

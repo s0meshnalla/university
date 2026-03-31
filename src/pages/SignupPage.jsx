@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -13,8 +13,14 @@ function SignupPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const toast = useToast()
 
-    const { register } = useAuth()
+    const { register, user, loading } = useAuth()
     const navigate = useNavigate()
+
+    useEffect(() => {
+        if (!loading && user) {
+            navigate('/dashboard', { replace: true })
+        }
+    }, [loading, user, navigate])
 
     // Password strength
     const getStrength = () => {

@@ -37,6 +37,10 @@ function DashboardPage() {
     const breakdown = data?.score_breakdown || {}
     const appStats = data?.application_stats || { total: 0, by_status: {} }
     const completeness = data?.profile_completeness || 0
+    const timeline = data?.status_timeline || {}
+    const upcomingDeadlines = data?.upcoming_deadlines || []
+    const actionRecommendations = data?.action_recommendations || []
+    const maxTimelineValue = Math.max(1, ...Object.values(timeline))
 
     return (
         <div className="dashboard-page">
@@ -153,6 +157,57 @@ function DashboardPage() {
                                         ))}
                                     </div>
                                 </>
+                            )}
+                        </div>
+
+                        {/* Status Timeline */}
+                        <div className="timeline-card card-glass">
+                            <h3>Status Movement Timeline</h3>
+                            <div className="timeline-bars">
+                                {['Applied', 'Under Review', 'Accepted', 'Rejected', 'Withdrawn'].map((status) => {
+                                    const value = timeline[status] || 0
+                                    return (
+                                        <div key={status} className="timeline-row">
+                                            <span className="timeline-status">{status}</span>
+                                            <div className="timeline-bar-wrap">
+                                                <div className="timeline-bar" style={{ width: `${(value / maxTimelineValue) * 100}%` }} />
+                                            </div>
+                                            <span className="timeline-value">{value}</span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <p className="timeline-note">Shows total status transitions recorded across your applications.</p>
+                        </div>
+
+                        {/* Deadlines & Recommendations */}
+                        <div className="insights-card card-glass">
+                            <h3>Priority Inbox</h3>
+                            {upcomingDeadlines.length > 0 ? (
+                                <div className="deadline-list">
+                                    {upcomingDeadlines.slice(0, 4).map((item) => (
+                                        <div key={item.application_id} className={`deadline-item ${item.days_left < 0 ? 'overdue' : item.days_left <= 7 ? 'urgent' : ''}`}>
+                                            <div>
+                                                <span className="deadline-uni">{item.university_name}</span>
+                                                <span className="deadline-program">{item.program}</span>
+                                            </div>
+                                            <span className="deadline-days">{item.days_left < 0 ? `${Math.abs(item.days_left)}d overdue` : `${item.days_left}d left`}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="empty-saved">No urgent deadlines in the next 3 weeks.</p>
+                            )}
+
+                            {actionRecommendations.length > 0 && (
+                                <div className="next-actions">
+                                    <h4>Next Best Actions</h4>
+                                    <ul>
+                                        {actionRecommendations.slice(0, 3).map((item, index) => (
+                                            <li key={index}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
                         </div>
 
